@@ -6,6 +6,6 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 {
 	public abstract class DiscreteLogarithmAlgorithm<T>
 	{
-		Task<T> Compute(IMultiplicativeGroup<T> group, T alpha, T beta, CancellationToken cancellationToken);
+		public abstract Task<T> Solve(IMultiplicativeGroup<T> group, T alpha, T beta, CancellationToken cancellationToken);
 	}
 }

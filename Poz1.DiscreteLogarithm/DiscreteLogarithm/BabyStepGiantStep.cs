@@ -1,68 +1,59 @@
 using Poz1.DiscreteLogarithm.Model;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 {
-	public class BabyStepGiantStep : IDiscreteLogarithmAlgorithm<int>
+	public class BabyStepGiantStep : DiscreteLogarithmAlgorithm<int>
 	{
-		public BabyStepGiantStep()
+		public override Task<int> Solve(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
 		{
-		}
+			TaskCompletionSource<int> task = new TaskCompletionSource<int>();
 
-		public Task<int> Compute(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
-		{
-			BabyStepGiantStep.<>c__DisplayClass0_0 variable = null;
-			TaskCompletionSource<int> taskCompletionSource = new TaskCompletionSource<int>();
-			Task.Run(new Action(variable, () => {
-				if ((this.@group is ICyclicGroup<int> ? false : !(this.@group is IFiniteGroup<int>)))
+			Task.Run(() => 
+			{
+				if (!(group is ICyclicGroup<int>) && !(group is IFiniteGroup<int>))
+					task.SetException(new ArgumentException("Group has to be finite and cyclic"));
+				
+
+				int m = (int)Math.Ceiling(Math.Sqrt((group as IFiniteGroup<int>).Order));
+				var table = new Dictionary<int, int>();
+
+				int alphaJ = group.Identity;
+				for (int j = 0; j < m; j++)
 				{
-					this.task.SetException(new ArgumentException("Group has to be finite and cyclic"));
+					if (cancellationToken.IsCancellationRequested)
+						task.SetCanceled();
+					
+					table.Add(alphaJ, j);
+					alphaJ = group.Multiply(alphaJ, alpha);
 				}
-				int num = (int)Math.Ceiling(Math.Sqrt((double)(this.@group as IFiniteGroup<int>).Order));
-				Dictionary<int, int> dictionary = new Dictionary<int, int>();
-				int identity = this.@group.Identity;
-				for (int i = 0; i < num; i++)
+
+				int inv = group.GetInverse(alpha);
+				int am = group.Identity;
+
+				for (int j = 0; j < m; j++)
 				{
-					if (this.cancellationToken.get_IsCancellationRequested())
-					{
-						this.task.SetCanceled();
-					}
-					dictionary.Add(identity, i);
-					identity = this.@group.Multiply(identity, this.alpha);
+					am = group.Multiply(am, inv);
 				}
-				int inverse = this.@group.GetInverse(this.alpha);
-				int identity1 = this.@group.Identity;
-				for (int j = 0; j < num; j++)
+
+				int gamma = beta;
+
+				for(int i = 0; i < m; i++)
 				{
-					identity1 = this.@group.Multiply(identity1, inverse);
+					if (cancellationToken.IsCancellationRequested)
+						task.SetCanceled();
+
+					if (table.ContainsKey(gamma))
+						task.SetResult(group.Multiply(i, m) + table[gamma]);
+
+					gamma = group.Multiply(am, gamma);
 				}
-				int num1 = this.beta;
-				int item = 0;
-				int num2 = 0;
-				while (num2 < num - 1)
-				{
-					if (this.cancellationToken.get_IsCancellationRequested())
-					{
-						this.task.SetCanceled();
-					}
-					if (!dictionary.ContainsKey(num1))
-					{
-						num1 = this.@group.Multiply(identity1, num1);
-						num2++;
-					}
-					else
-					{
-						item = num2 * num + dictionary.get_Item(num1);
-						break;
-					}
-				}
-				this.task.SetResult(item);
-			}));
-			return taskCompletionSource.get_Task();
+			});
+
+			return task.Task;
 		}
 	}
 }
