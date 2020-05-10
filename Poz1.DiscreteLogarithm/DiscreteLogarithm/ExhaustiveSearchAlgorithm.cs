@@ -16,6 +16,7 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 				if (!(group is ICyclicGroup<int>) && !(group is IFiniteGroup<int>))
 				{
 					task.SetException(new ArgumentException("Group has to be finite and cyclic"));
+					return;
 				}
 
 				int identity  = group.Identity;
@@ -28,6 +29,7 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 				}
 				
 				task.SetResult(num);
+				return;
 			});
 
 			return task.Task;

@@ -1,24 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Poz1.DiscreteLogarithm.Model;
 
 namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 {
-    class PollardRhoS1<T> : PollardRhoPartition<T>
-    {
-        public override int GetNextA()
+    public class PollardRhoS1<T> : PollardRhoPartition<T>
+    { 
+        public override int GetNextA(IFiniteGroup<T> group, int a)
         {
-            throw new NotImplementedException();
+            return a;
+        }
+        public override int GetNextB(IFiniteGroup<T> group, int b)
+        {
+            return (b + 1) % group.Order;
         }
 
-        public override int GetNextB()
+        public override T GetNextX(IFiniteGroup<T> group, T alpha, T beta, T x)
         {
-            throw new NotImplementedException();
-        }
-
-        public override T GetNextX()
-        {
-            throw new NotImplementedException();
+            return group.Multiply(beta, x);
         }
     }
 }

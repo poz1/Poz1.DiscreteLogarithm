@@ -15,8 +15,10 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 			Task.Run(() => 
 			{
 				if (!(group is ICyclicGroup<int>) && !(group is IFiniteGroup<int>))
+				{
 					task.SetException(new ArgumentException("Group has to be finite and cyclic"));
-				
+					return;
+				}
 
 				int m = (int)Math.Ceiling(Math.Sqrt((group as IFiniteGroup<int>).Order));
 				var table = new Dictionary<int, int>();
@@ -25,8 +27,11 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 				for (int j = 0; j < m; j++)
 				{
 					if (cancellationToken.IsCancellationRequested)
+					{
 						task.SetCanceled();
-					
+						return;
+					}
+
 					table.Add(alphaJ, j);
 					alphaJ = group.Multiply(alphaJ, alpha);
 				}
@@ -44,10 +49,16 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 				for(int i = 0; i < m; i++)
 				{
 					if (cancellationToken.IsCancellationRequested)
+					{
 						task.SetCanceled();
+						return;
+					}
 
 					if (table.ContainsKey(gamma))
+					{
 						task.SetResult(group.Multiply(i, m) + table[gamma]);
+						return;
+					}
 
 					gamma = group.Multiply(am, gamma);
 				}

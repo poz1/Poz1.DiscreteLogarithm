@@ -9,7 +9,7 @@ namespace Poz1.DiscreteLogarithm.Model
 		{
 			List<int> list = new List<int>(n);
 			int num = 2;
-			while (list.get_Count() < n)
+			while (list.Count < n)
 			{
 				bool flag = true;
 				int num1 = 2;

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Poz1.DiscreteLogarithm.Model
@@ -22,7 +23,7 @@ namespace Poz1.DiscreteLogarithm.Model
 				{
 					this.ComputeElements();
 				}
-				return (this.elements).ToImmutableList<int>;
+				return elements.ToImmutableList<int>();
 			}
 		}
 
@@ -69,6 +70,7 @@ namespace Poz1.DiscreteLogarithm.Model
 
 		public IntegersModuloMultiplicativeGroup(int modulus)
 		{
+			//MUst be prime or it's not a group
 			this.Modulus = modulus;
 		}
 
@@ -128,34 +130,42 @@ namespace Poz1.DiscreteLogarithm.Model
 
 		public int GetInverse(int x)
 		{
-			int num;
-			IEnumerator<int> enumerator = this.Elements.GetEnumerator();
-			try
+			for (int i = 0; i < elements.Count; i++)
 			{
-				while (enumerator.MoveNext())
+				if (Multiply(elements[i], x) == Identity)
 				{
-					int current = enumerator.get_Current();
-					if (this.Multiply(current, x) == this.Identity)
-					{
-						num = current;
-						return num;
-					}
-				}
-				throw new Exception("boh");
-			}
-			finally
-			{
-				if (enumerator != null)
-				{
-					enumerator.Dispose();
+					return elements[i];
 				}
 			}
-			return num;
+			throw new Exception("boh");
+			//var num = x;
+			//int modulus = this.Modulus;
+			//if (num == 0)
+			//{
+			//	throw new ArithmeticException("Division by zero");
+			//}
+			//int num1 = 0;
+			//int num2 = 1;
+			//while (num != 0)
+			//{
+			//	int num3 = modulus % num;
+			//	int num4 = num1 - modulus / num * num2;
+			//	modulus = num;
+			//	num = num3;
+			//	num1 = num2;
+			//	num2 = num4;
+			//}
+			//if (modulus != 1)
+			//{
+			//	throw new ArgumentOutOfRangeException("Field modulus is not prime");
+			//}
+			//int modulus1 = (int)(((long)num1 + (long)this.Modulus) % (long)this.Modulus);
+			//return modulus1;
 		}
 
 		public int Multiply(int x, int y)
 		{
-			return x * y % this.Modulus;
+			return (x * y) % Modulus;
 		}
 	}
 }

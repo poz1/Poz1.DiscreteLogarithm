@@ -1,21 +1,34 @@
-using Poz1.DiscreteLogarithm.Model;
 using System;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading;
 using System.Threading.Tasks;
+using Poz1.DiscreteLogarithm.Model;
 
 namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 {
 	public class PollardRhoAlgorithm : DiscreteLogarithmAlgorithm<int>
 	{
-		private readonly Func<int, PollardRhoPartitionID> partitionFunction;
-		public PollardRhoAlgorithm() : this(x => (PollardRhoPartitionID)(x % 3)) { }
-		public PollardRhoAlgorithm(Func<int, PollardRhoPartitionID> partitionFunction)
+		private readonly Func<int, PollardRhoPartition<int>> partitionFunction;
+
+		public PollardRhoAlgorithm() : this(x => 
+		{
+			var s1 = new PollardRhoS1<int>();
+			var s2 = new PollardRhoS2<int>();
+			var s3 = new PollardRhoS3<int>();
+
+			return (x % 3) switch
+			{
+				1 => s1,
+				2 => s3,
+				_ => s2,
+			};
+		}) { }
+		
+		public PollardRhoAlgorithm(Func<int, PollardRhoPartition<int>> partitionFunction)
 		{
 			this.partitionFunction = partitionFunction;
 		}
-
-	
 
 		public override Task<int> Solve(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
 		{
@@ -24,177 +37,55 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 			Task.Run(() =>
 			{
 				if (!(group is ICyclicGroup<int>) && !(group is IFiniteGroup<int>))
+				{
 					task.SetException(new ArgumentException("Group has to be finite and cyclic"));
+					return;
+				}
 
-				var x = 0;
-				var a = 0;
-				var b = 0;
+				var finiteGroup = (IFiniteGroup<int>)group;
+				var table = new Dictionary<int, PollardRhoTriad<int>>();
+				var triad = new PollardRhoTriad<int>(1,0,0);
 
+				for(int i = 1; ;i++)
+				{
+					var partition = partitionFunction(triad.X);
 
+					triad = partition.GetNextTriad(finiteGroup, alpha, beta, triad.X, triad.A, triad.B);
+					Console.WriteLine("i: " + i + " X: " + triad.X + " A: " + triad.A + " B: " + triad.B);
+
+					table.Add(i, triad);
+
+					if (i % 2 != 0)
+						continue;
+
+					var halfIndex = i / 2;
+					if (halfIndex > 0 && table[halfIndex].X == triad.X)
+					{
+						var r = Modulus(table[halfIndex].B - triad.B, finiteGroup.Order);
+						if (r == 0)
+						{
+							task.SetException(new Exception("Terminate the algorithm with failure"));
+							return;
+						}
+						else
+						{
+							var x = Modulus(group.Multiply(group.GetInverse(r), triad.A - table[halfIndex].A), finiteGroup.Order);
+							task.SetResult(x);
+							return;
+						}
+					}
+				}
 			});
 
 			return task.Task;
 		}
+
+		private int Modulus(int n, int mod)
+		{
+			if (n < 0)
+				n = mod + n;
+
+			return n % mod;
+		}
 	}
-
-	//private class PollardTriad
-	//{
-	//	public int A
-	//	{
-	//		get;
-	//		set;
-	//	}
-
-	//	public int B
-	//	{
-	//		get;
-	//		set;
-	//	}
-
-	//	public int X
-	//	{
-	//		get;
-	//		set;
-	//	}
-
-	//	public PollardTriad()
-	//	{
-	//	}
-	//}
-	//private int n;
-
-	//private IMultiplicativeGroup<int> group;
-
-	// Task<int> Compute(int alpha, int n, int beta, CancellationToken cancellationToken)
-	////{
-	////	PollardRho.<>c__DisplayClass2_0 variable = null;
-	////	Task<int> task = null;
-	////	task = Task.Run<int>(new Func<int>(variable, () => {
-	////		this.<>4__this.n = this.n;
-	////		int num = 0;
-	////		PollardRho.PollardTriad pollardTriad = new PollardRho.PollardTriad()
-	////		{
-	////			X = 1,
-	////			A = 0,
-	////			B = 0
-	////		};
-	////		PollardRho.PollardTriad nextTriad = new PollardRho.PollardTriad()
-	////		{
-	////			X = 1,
-	////			A = 0,
-	////			B = 0
-	////		};
-	////		for (int i = 1; i < this.n; i++)
-	////		{
-	////			if (this.cancellationToken.get_IsCancellationRequested())
-	////			{
-	////				throw new TaskCanceledException(this.task);
-	////			}
-	////			pollardTriad = this.<>4__this.GetNextTriad(pollardTriad);
-	////			nextTriad = this.<>4__this.GetNextTriad(nextTriad);
-	////			nextTriad = this.<>4__this.GetNextTriad(nextTriad);
-	////			if (pollardTriad.X == nextTriad.X)
-	////			{
-	////				int b = (pollardTriad.B - nextTriad.B) % this.n;
-	////				if (b == 0)
-	////				{
-	////					throw new Exception("Algorithm Failure!");
-	////				}
-	////				num = (int)(Math.Pow((double)b, -1) * (double)(nextTriad.A - pollardTriad.A)) % this.n;
-	////			}
-	////		}
-	////		return num;
-	////	}));
-	////	return task;
-	////}
-
-	////public Task<int> Compute(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
-	////{
-	////	PollardRho.<>c__DisplayClass3_0 variable = null;
-	////	TaskCompletionSource<int> taskCompletionSource = new TaskCompletionSource<int>();
-	////	IFiniteGroup<int> finiteGroup = group as IFiniteGroup<int>;
-	////	this.@group = group;
-	////	this.n = finiteGroup.Order;
-	////	Task.Run(new Action(variable, () => {
-	////		int num = 0;
-	////		PollardRho.PollardTriad pollardTriad = new PollardRho.PollardTriad()
-	////		{
-	////			X = 1,
-	////			A = 0,
-	////			B = 0
-	////		};
-	////		PollardRho.PollardTriad nextTriad = new PollardRho.PollardTriad()
-	////		{
-	////			X = 1,
-	////			A = 0,
-	////			B = 0
-	////		};
-	////		for (int i = 1; i < this.<>4__this.n; i++)
-	////		{
-	////			if (this.cancellationToken.get_IsCancellationRequested())
-	////			{
-	////				this.task.SetCanceled();
-	////			}
-	////			pollardTriad = this.<>4__this.GetNextTriad(pollardTriad);
-	////			nextTriad = this.<>4__this.GetNextTriad(nextTriad);
-	////			nextTriad = this.<>4__this.GetNextTriad(nextTriad);
-	////			if (pollardTriad.X == nextTriad.X)
-	////			{
-	////				int b = (pollardTriad.B - nextTriad.B) % this.<>4__this.n;
-	////				if (b == 0)
-	////				{
-	////					throw new Exception("Algorithm Failure!");
-	////				}
-	////				num = (int)(Math.Pow((double)b, -1) * (double)(nextTriad.A - pollardTriad.A)) % this.<>4__this.n;
-	////			}
-	////		}
-	////		this.task.SetResult(num);
-	////	}));
-	////	return taskCompletionSource.get_Task();
-	////}
-
-	//private PollardRhoAlgorithm.PollardTriad GetNextTriad(PollardRhoAlgorithm.PollardTriad triad)
-	//{
-	//	PollardRhoAlgorithm.PollardTriad pollardTriad;
-	//	switch (triad.X % 3)
-	//	{
-	//		case 0:
-	//			{
-	//				pollardTriad = new PollardRhoAlgorithm.PollardTriad()
-	//				{
-	//					X = (int)Math.Pow((double)triad.X, 2),
-	//					A = this.@group.Multiply(triad.A, 2),
-	//					B = this.@group.Multiply(triad.B, 2)
-	//				};
-	//				break;
-	//			}
-	//		case 1:
-	//			{
-	//				pollardTriad = new PollardRhoAlgorithm.PollardTriad()
-	//				{
-	//					X = (int)Math.Pow((double)triad.X, 2),
-	//					A = this.@group.Multiply(triad.A, 2),
-	//					B = this.@group.Multiply(triad.B, 2)
-	//				};
-	//				break;
-	//			}
-	//		case 2:
-	//			{
-	//				pollardTriad = new PollardRhoAlgorithm.PollardTriad()
-	//				{
-	//					X = (int)Math.Pow((double)triad.X, 2),
-	//					A = this.@group.Multiply(triad.A, 2),
-	//					B = this.@group.Multiply(triad.B, 2)
-	//				};
-	//				break;
-	//			}
-	//		default:
-	//			{
-	//				pollardTriad = null;
-	//				break;
-	//			}
-	//	}
-	//	return pollardTriad;
-	//}
-
 }
