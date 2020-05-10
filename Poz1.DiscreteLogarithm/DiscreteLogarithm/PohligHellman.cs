@@ -1,60 +1,96 @@
-//using Poz1.DiscreteLogarithm.Model;
-//using System;
-//using System.Collections.Generic;
-//using System.Diagnostics;
-//using System.Numerics;
-//using System.Runtime.CompilerServices;
-//using System.Threading;
-//using System.Threading.Tasks;
+using Poz1.DiscreteLogarithm.Algebra;
+using Poz1.DiscreteLogarithm.Model;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
-//namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
-//{
-//	public class PohligHellman : IDiscreteLogarithmAlgorithm<int>
-//	{
-//		public PohligHellman()
-//		{
-//		}
+namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
+{
+	public class PohligHellman : DiscreteLogarithmAlgorithm<int>
+	{
+		private readonly DiscreteLogarithmAlgorithm<int> discreteLogarithmAlgorithm;
+		public PohligHellman(DiscreteLogarithmAlgorithm<int> discreteLogarithmAlgorithm)
+		{
+			this.discreteLogarithmAlgorithm = discreteLogarithmAlgorithm;
+		}
 
-//		public Task<int> Compute(int a, int n, int b, CancellationToken cancellationToken)
-//		{
-//			PohligHellman.<>c__DisplayClass0_0 variable = null;
-//			Task<int> task = null;
-//			ExhaustiveSearchAlgorithm exhaustiveSearch = new ExhaustiveSearchAlgorithm();
-//			task = Task.Run<int>(new Func<Task<int>>(variable, async () => {
-//				List<Factor> primeFactors = PrimeNumber.GetPrimeFactors(this.n);
-//				foreach (Factor primeFactor in primeFactors)
-//				{
-//					if (this.cancellationToken.get_IsCancellationRequested())
-//					{
-//						throw new TaskCanceledException(this.task);
-//					}
-//					int num = 1;
-//					List<int> list = new List<int>();
-//					BigInteger bigInteger = BigInteger.Pow(this.a, (int)((double)this.n / Math.Pow((double)primeFactor.Number, 1))) % this.n + 1;
-//					for (int i = 1; i <= primeFactor.Count; i++)
-//					{
-//						int num1 = (int)((double)this.n / Math.Pow((double)primeFactor.Number, (double)i));
-//						BigInteger bigInteger1 = BigInteger.Pow(this.b / num, num1) % this.n + 1;
-//						int item = list.get_Item(list.get_Count() - 1);
-//						int num2 = (int)Math.Pow((double)primeFactor.Number, (double)(i - 1));
-//						BigInteger bigInteger2 = BigInteger.Pow(this.a, item * num2);
-//						num = (int)((num * bigInteger2) % this.n + 1);
-//						bigInteger1 = new BigInteger();
-//						bigInteger2 = new BigInteger();
-//					}
-//					list = null;
-//					bigInteger = new BigInteger();
-//				}
-//				int num3 = 0;
-//				primeFactors = null;
-//				return num3;
-//			}));
-//			return task;
-//		}
+		public PohligHellman() : this(new ExhaustiveSearchAlgorithm())
+		{ }
 
-//		public Task<int> Compute(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
-//		{
-//			throw new NotImplementedException();
-//		}
-//	}
-//}
+		public override Task<int> Solve(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
+		{
+			TaskCompletionSource<int> task = new TaskCompletionSource<int>();
+
+			Task.Run(async () =>
+			{
+				if (!(group is ICyclicGroup<int>) && !(group is IFiniteGroup<int>))
+				{
+					task.SetException(new ArgumentException("Group has to be finite and cyclic"));
+					return;
+				}
+
+				var finiteGroup = (IFiniteGroup<int>)group;
+
+				List<Factor> primeFactors = PrimeNumber.GetPrimeFactors(finiteGroup.Order);
+				List<Congruence<int>> congruences = new List<Congruence<int>>();
+				var solutionModulo = 1;
+
+				foreach (Factor factor in primeFactors)
+				{
+					if (cancellationToken.IsCancellationRequested)
+					{
+						task.SetCanceled();
+						return;
+					}
+
+					var q = factor.Number;
+					var e = factor.Count;
+
+					var gamma = 1;
+					var l = 0;
+					var x = 0;
+
+					var alphaS = group.Pow(alpha, finiteGroup.Order / q);
+
+					for(int i = 0; i < e; i++)
+					{
+						gamma *= group.Pow(alpha, l * group.Pow(q, i - 1));
+						var betaS = group.Pow( beta * group.GetInverse(gamma), finiteGroup.Order/ group.Pow(q, i +1));
+
+						l = await discreteLogarithmAlgorithm.Solve(group, alphaS, betaS, cancellationToken);
+						x += l * group.Pow(q, i);
+					}
+
+					var congruence = new Congruence<int>(x, (int)Math.Pow(factor.Number , factor.Count));
+					solutionModulo *= congruence.Modulus;
+					congruences.Add(congruence);
+				}
+
+				var result = SolveCongruences( congruences, solutionModulo);
+				task.SetResult(result);
+			});
+
+			return task.Task;
+		}
+
+		//Gauss's Algorithm (2.121)
+		private int SolveCongruences(List<Congruence<int>> congruences, int solutionModulo)
+		{
+			var res = 0;
+			foreach(var congruence in congruences)
+			{
+				var congruenceGroup = new ModuloMultiplicativeGroup(congruence.Modulus);
+
+				var n = solutionModulo / congruence.Modulus;
+				var m = congruenceGroup.GetInverse(n);
+				res += (congruence.Value * n * m) % solutionModulo;
+			}
+
+			return res;
+		}
+	}
+}
