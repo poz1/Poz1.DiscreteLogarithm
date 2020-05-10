@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 {
-	public class BabyStepGiantStep : DiscreteLogarithmAlgorithm<int>
+	public class BabyStepGiantStepAlgorithm : DiscreteLogarithmAlgorithm<int>
 	{
 		public override Task<int> Solve(IMultiplicativeGroup<int> group, int alpha, int beta, CancellationToken cancellationToken)
 		{

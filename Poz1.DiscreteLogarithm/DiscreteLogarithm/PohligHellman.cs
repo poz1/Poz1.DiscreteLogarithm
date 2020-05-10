@@ -19,7 +19,7 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 		{
 			PohligHellman.<>c__DisplayClass0_0 variable = null;
 			Task<int> task = null;
-			ExhaustiveSearch exhaustiveSearch = new ExhaustiveSearch();
+			ExhaustiveSearchAlgorithm exhaustiveSearch = new ExhaustiveSearchAlgorithm();
 			task = Task.Run<int>(new Func<Task<int>>(variable, async () => {
 				List<Factor> primeFactors = PrimeNumber.GetPrimeFactors(this.n);
 				foreach (Factor primeFactor in primeFactors)
