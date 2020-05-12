@@ -11,7 +11,7 @@
 //		{
 //			get
 //			{
-//				return (this.Values == null ? 0 : this.Values.GetLength(1));
+//				return (Values == null ? 0 : Values.GetLength(1));
 //			}
 //		}
 
@@ -24,7 +24,7 @@
 //		{
 //			get
 //			{
-//				return (this.Values == null ? 0 : this.Values.GetLength(0));
+//				return (Values == null ? 0 : Values.GetLength(0));
 //			}
 //		}
 
@@ -40,41 +40,41 @@
 //			{
 //				throw new ArgumentOutOfRangeException("Invalid number of rows or columns");
 //			}
-//			this.<Field>k__BackingField = field;
-//			this.Values = new E[rows, cols];
+//			Field = field;
+//			Values = new E[rows, cols];
 //		}
 
 //		public void AddRows(int srcRow, int destRow, E factor)
 //		{
-//			if ((srcRow < 0 || srcRow >= this.RowCount || destRow < 0 ? true : destRow >= this.RowCount))
+//			if ((srcRow < 0 || srcRow >= RowCount || destRow < 0 ? true : destRow >= RowCount))
 //			{
 //				throw new ArgumentOutOfRangeException("Row index out of bounds");
 //			}
 //			int num = 0;
-//			int columnCount = this.ColumnCount;
+//			int columnCount = ColumnCount;
 //			while (num < columnCount)
 //			{
-//				this.Values[destRow, num] = this.Field.Add(this.Values[destRow, num], this.Field.Multiply(this.Values[srcRow, num], factor));
+//				Values[destRow, num] = Field.Add(Values[destRow, num], Field.Multiply(Values[srcRow, num], factor));
 //				num++;
 //			}
 //		}
 
 //		public E DeterminantAndRef()
 //		{
-//			int rowCount = this.RowCount;
-//			int columnCount = this.ColumnCount;
+//			int rowCount = RowCount;
+//			int columnCount = ColumnCount;
 //			if (rowCount != columnCount)
 //			{
 //				throw new InvalidOperationException("Matrix dimensions are not square");
 //			}
-//			E one = this.Field.One;
+//			E one = Field.One;
 //			int num = 0;
 //			for (int i = 0; i < columnCount; i++)
 //			{
 //				int num1 = num;
 //				while (true)
 //				{
-//					if ((num1 >= rowCount ? true : !this.Field.Equals(this.Values[num1, i], this.Field.Zero)))
+//					if ((num1 >= rowCount ? true : !Field.Equals(Values[num1, i], Field.Zero)))
 //					{
 //						break;
 //					}
@@ -84,62 +84,62 @@
 //				{
 //					if (num != num1)
 //					{
-//						this.SwapRows(num, num1);
-//						one = this.Field.Negate(one);
+//						SwapRows(num, num1);
+//						one = Field.Negate(one);
 //					}
 //					num1 = num;
 //					num++;
-//					E values = this.Values[num1, i];
-//					this.MultiplyRow(num1, this.Field.Reciprocal(values));
-//					one = this.Field.Multiply(values, one);
+//					E values = Values[num1, i];
+//					MultiplyRow(num1, Field.Reciprocal(values));
+//					one = Field.Multiply(values, one);
 //					for (int j = num1 + 1; j < rowCount; j++)
 //					{
-//						this.AddRows(num1, j, this.Field.Negate(this.Values[j, i]));
+//						AddRows(num1, j, Field.Negate(Values[j, i]));
 //					}
 //				}
-//				one = this.Field.Multiply(this.Values[i, i], one);
+//				one = Field.Multiply(Values[i, i], one);
 //			}
 //			return one;
 //		}
 
 //		public E Get(int row, int col)
 //		{
-//			if ((row < 0 || row >= this.RowCount || col < 0 ? true : col >= this.ColumnCount))
+//			if ((row < 0 || row >= RowCount || col < 0 ? true : col >= ColumnCount))
 //			{
 //				throw new ArgumentOutOfRangeException("Row or column index out of bounds");
 //			}
-//			return this.Values[row, col];
+//			return Values[row, col];
 //		}
 
 //		public E[] GetColumn(int columnNumber)
 //		{
-//			Matrix<E>.<>c__DisplayClass16_0 variable = null;
-//			E[] array = Enumerable.ToArray<E>(Enumerable.Select<int, E>(Enumerable.Range(0, this.RowCount), new Func<int, E>(variable, (int x) => this.<>4__this.Values[x, this.columnNumber])));
+//			Matrix<E>.<> c__DisplayClass16_0 variable = null;
+//			E[] array = Enumerable.ToArray<E>(Enumerable.Select<int, E>(Enumerable.Range(0, RowCount), new Func<int, E>(variable, (int x) => <> 4__Values[x, columnNumber])));
 //			return array;
 //		}
 
 //		public E[] GetRow(int rowNumber)
 //		{
-//			Matrix<E>.<>c__DisplayClass17_0 variable = null;
-//			E[] array = Enumerable.ToArray<E>(Enumerable.Select<int, E>(Enumerable.Range(0, this.ColumnCount), new Func<int, E>(variable, (int x) => this.<>4__this.Values[this.rowNumber, x])));
+//			Matrix<E>.<> c__DisplayClass17_0 variable = null;
+//			E[] array = Enumerable.ToArray<E>(Enumerable.Select<int, E>(Enumerable.Range(0, ColumnCount), new Func<int, E>(variable, (int x) => <> 4__Values[rowNumber, x])));
 //			return array;
 //		}
 
 //		public void Invert()
 //		{
-//			int rowCount = this.RowCount;
-//			int columnCount = this.ColumnCount;
+//			int rowCount = RowCount;
+//			int columnCount = ColumnCount;
 //			if (rowCount != columnCount)
 //			{
 //				throw new InvalidOperationException("Matrix dimensions are not square");
 //			}
-//			Matrix<E> matrix = new Matrix<E>(rowCount, columnCount * 2, this.Field);
+//			Matrix<E> matrix = new Matrix<E>(rowCount, columnCount * 2, Field);
 //			for (int i = 0; i < rowCount; i++)
 //			{
 //				for (int j = 0; j < columnCount; j++)
 //				{
-//					matrix.Set(i, j, this.Values[i, j]);
-//					matrix.Set(i, j + columnCount, (i == j ? this.Field.One : this.Field.Zero));
+//					matrix.Set(i, j, Values[i, j]);
+//					matrix.Set(i, j + columnCount, (i == j ? Field.One : Field.Zero));
 //				}
 //			}
 //			matrix.ReducedRowEchelonForm();
@@ -147,7 +147,7 @@
 //			{
 //				for (int l = 0; l < columnCount; l++)
 //				{
-//					if (!this.Field.Equals(matrix.Values[k, l], (k == l ? this.Field.One : this.Field.Zero)))
+//					if (!Field.Equals(matrix.Values[k, l], (k == l ? Field.One : Field.Zero)))
 //					{
 //						throw new InvalidOperationException("Matrix is not invertible");
 //					}
@@ -157,29 +157,29 @@
 //			{
 //				for (int n = 0; n < columnCount; n++)
 //				{
-//					this.Set(m, n, matrix.Values[m, n + columnCount]);
+//					Set(m, n, matrix.Values[m, n + columnCount]);
 //				}
 //			}
 //		}
 
 //		public Matrix<E> Multiply(Matrix<E> other)
 //		{
-//			if (this.ColumnCount != other.RowCount)
+//			if (ColumnCount != other.RowCount)
 //			{
 //				throw new ArgumentOutOfRangeException("Incompatible matrix sizes for multiplication");
 //			}
-//			int rowCount = this.RowCount;
+//			int rowCount = RowCount;
 //			int columnCount = other.ColumnCount;
-//			int num = this.ColumnCount;
-//			Matrix<E> matrix = new Matrix<E>(rowCount, columnCount, this.Field);
+//			int num = ColumnCount;
+//			Matrix<E> matrix = new Matrix<E>(rowCount, columnCount, Field);
 //			for (int i = 0; i < rowCount; i++)
 //			{
 //				for (int j = 0; j < columnCount; j++)
 //				{
-//					E zero = this.Field.Zero;
+//					E zero = Field.Zero;
 //					for (int k = 0; k < num; k++)
 //					{
-//						zero = this.Field.Add(this.Field.Multiply(this.Values[i, k], other.Values[k, j]), zero);
+//						zero = Field.Add(Field.Multiply(Values[i, k], other.Values[k, j]), zero);
 //					}
 //					matrix.Set(i, j, zero);
 //				}
@@ -189,23 +189,23 @@
 
 //		public void MultiplyRow(int row, E factor)
 //		{
-//			if ((row < 0 ? true : row >= this.RowCount))
+//			if ((row < 0 ? true : row >= RowCount))
 //			{
 //				throw new ArgumentOutOfRangeException("Row index out of bounds");
 //			}
 //			int num = 0;
-//			int columnCount = this.ColumnCount;
+//			int columnCount = ColumnCount;
 //			while (num < columnCount)
 //			{
-//				this.Values[row, num] = this.Field.Multiply(this.Values[row, num], factor);
+//				Values[row, num] = Field.Multiply(Values[row, num], factor);
 //				num++;
 //			}
 //		}
 
 //		public void ReducedRowEchelonForm()
 //		{
-//			int rowCount = this.RowCount;
-//			int columnCount = this.ColumnCount;
+//			int rowCount = RowCount;
+//			int columnCount = ColumnCount;
 //			int num = 0;
 //			int num1 = 0;
 //			while (true)
@@ -217,7 +217,7 @@
 //				int num2 = num;
 //				while (true)
 //				{
-//					if ((num2 >= rowCount ? true : !this.Field.Equals(this.Values[num2, num1], this.Field.Zero)))
+//					if ((num2 >= rowCount ? true : !Field.Equals(Values[num2, num1], Field.Zero)))
 //					{
 //						break;
 //					}
@@ -225,25 +225,25 @@
 //				}
 //				if (num2 != rowCount)
 //				{
-//					this.SwapRows(num, num2);
+//					SwapRows(num, num2);
 //					num2 = num;
 //					num++;
-//					this.MultiplyRow(num2, this.Field.Reciprocal(this.Values[num2, num1]));
+//					MultiplyRow(num2, Field.Reciprocal(Values[num2, num1]));
 //					for (int i = num2 + 1; i < rowCount; i++)
 //					{
-//						this.AddRows(num2, i, this.Field.Negate(this.Values[i, num1]));
+//						AddRows(num2, i, Field.Negate(Values[i, num1]));
 //					}
 //				}
 //				num1++;
 //			}
 //			Console.WriteLine("\n ---- \n");
-//			Console.WriteLine(this.ToString());
+//			Console.WriteLine(ToString());
 //			for (int j = num - 1; j >= 0; j--)
 //			{
 //				int num3 = 0;
 //				while (true)
 //				{
-//					if ((num3 >= columnCount ? true : !this.Field.Equals(this.Values[j, num3], this.Field.Zero)))
+//					if ((num3 >= columnCount ? true : !Field.Equals(Values[j, num3], Field.Zero)))
 //					{
 //						break;
 //					}
@@ -253,7 +253,7 @@
 //				{
 //					for (int k = j - 1; k >= 0; k--)
 //					{
-//						this.AddRows(j, k, this.Field.Negate(this.Values[k, num3]));
+//						AddRows(j, k, Field.Negate(Values[k, num3]));
 //					}
 //				}
 //			}
@@ -261,76 +261,78 @@
 
 //		public void Set(int row, int col, E val)
 //		{
-//			if ((row < 0 || row >= this.RowCount || col < 0 ? true : col >= this.ColumnCount))
+//			if ((row < 0 || row >= RowCount || col < 0 ? true : col >= ColumnCount))
 //			{
 //				throw new ArgumentOutOfRangeException("Row or column index out of bounds");
 //			}
-//			this.Values[row, col] = val;
+//			Values[row, col] = val;
 //		}
 
 //		public void SetColumn(int columnNumber, E[] newColumn)
 //		{
-//			for (int i = 0; i < this.RowCount; i++)
+//			for (int i = 0; i < RowCount; i++)
 //			{
-//				this.Values[i, columnNumber] = newColumn[i];
+//				Values[i, columnNumber] = newColumn[i];
 //			}
 //		}
 
 //		public void SetRow(int rowNumber, E[] newRow)
 //		{
-//			for (int i = 0; i < this.ColumnCount; i++)
+//			for (int i = 0; i < ColumnCount; i++)
 //			{
-//				this.Values[rowNumber, i] = newRow[i];
+//				Values[rowNumber, i] = newRow[i];
 //			}
 //		}
 
 //		public void SwapRows(int row0, int row1)
 //		{
-//			if ((row0 < 0 || row0 >= this.RowCount || row1 < 0 ? true : row1 >= this.RowCount))
+//			if ((row0 < 0 || row0 >= RowCount || row1 < 0 ? true : row1 >= RowCount))
 //			{
 //				throw new ArgumentOutOfRangeException("Row or column index out of bounds");
 //			}
-//			E[] row = this.GetRow(row0);
-//			this.SetRow(row0, this.GetRow(row1));
-//			this.SetRow(row1, row);
+//			E[] row = GetRow(row0);
+//			SetRow(row0, GetRow(row1));
+//			SetRow(row1, row);
 //		}
+
+
+//		public Matrix<E> Transpose()
+//		{
+//			int rowCount = RowCount;
+//			int columnCount = ColumnCount;
+//			Matrix<E> matrix = new Matrix<E>(columnCount, rowCount, Field);
+//			for (int i = 0; i < rowCount; i++)
+//			{
+//				for (int j = 0; j < columnCount; j++)
+//				{
+//					matrix.Values[j, i] = Values[i, j];
+//				}
+//			}
+//			return matrix;
+//		}
+
 
 //		public override string ToString()
 //		{
 //			StringBuilder stringBuilder = new StringBuilder();
-//			for (int i = 0; i < this.RowCount; i++)
+//			for (int i = 0; i < RowCount; i++)
 //			{
 //				if (i > 0)
 //				{
 //					stringBuilder.Append("\n");
 //				}
 //				stringBuilder.Append("[");
-//				for (int j = 0; j < this.ColumnCount; j++)
+//				for (int j = 0; j < ColumnCount; j++)
 //				{
 //					if (j > 0)
 //					{
 //						stringBuilder.Append(" ");
 //					}
-//					stringBuilder.Append(this.Values[i, j]);
+//					stringBuilder.Append(Values[i, j]);
 //				}
 //				stringBuilder.Append("]");
 //			}
 //			return stringBuilder.ToString();
-//		}
-
-//		public Matrix<E> Transpose()
-//		{
-//			int rowCount = this.RowCount;
-//			int columnCount = this.ColumnCount;
-//			Matrix<E> matrix = new Matrix<E>(columnCount, rowCount, this.Field);
-//			for (int i = 0; i < rowCount; i++)
-//			{
-//				for (int j = 0; j < columnCount; j++)
-//				{
-//					matrix.Values[j, i] = this.Values[i, j];
-//				}
-//			}
-//			return matrix;
 //		}
 //	}
 //}

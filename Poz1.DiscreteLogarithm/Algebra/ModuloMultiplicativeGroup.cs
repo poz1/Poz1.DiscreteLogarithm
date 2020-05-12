@@ -46,7 +46,7 @@ namespace Poz1.DiscreteLogarithm.Model
 
 		public ModuloMultiplicativeGroup(int modulus)
 		{
-			//MUst be prime or it's not a group
+			//Must be prime or it's not a group
 			Modulus = modulus;
 		}
 
@@ -63,7 +63,7 @@ namespace Poz1.DiscreteLogarithm.Model
 			lazyLoaded = true;
 		}
 
-		private int EuclideanGCD(int x, int y)
+		public int EuclideanGCD(int x, int y)
 		{ 
 			if ((x < 0) || (y < 0))
 				throw new ArgumentOutOfRangeException("x and y cannot be negative");
@@ -111,6 +111,9 @@ namespace Poz1.DiscreteLogarithm.Model
 			if (!lazyLoaded)
 				ComputeElements();
 
+			while (x > Modulus)
+				x -= Modulus;
+
 			for (int i = 0; i < elements.Count; i++)
 			{
 				if (Multiply(elements[i], x) == Identity)
@@ -119,7 +122,8 @@ namespace Poz1.DiscreteLogarithm.Model
 				}
 			}
 
-			throw new Exception("Modulus must be prime or it's not a group");
+			return 0;
+			//throw new Exception("Modulus must be prime or it's not a group");
 		}
 
 		public int Multiply(int x, int y)
