@@ -54,35 +54,6 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 			return numArray;
 		}
 
-		//public async Task<int> Compute(int alpha, int groupOrder, int beta, CancellationToken cancellationToken)
-		//{
-		//	IndexCalculus.<> c__DisplayClass2_0 variable = null;
-		//	this.groupOrder = groupOrder;
-		//	this.alpha = alpha;
-		//	TaskCompletionSource<int> taskCompletionSource = new TaskCompletionSource<int>();
-		//	Task.Run(new Action(variable, () =>
-		//	{
-		//		int num = 5;
-		//		int num1 = 1;
-		//		List<int> firstNPrimes = PrimeNumber.GetFirstNPrimes(num);
-		//		int[][] linearEquations = this.<> 4__this.GetLinearEquations(num + num1, firstNPrimes);
-		//		Matrix<int> matrix = new Matrix<int>((int)linearEquations.Length, (int)linearEquations[0].Length, new PrimeField(this.groupOrder + 1));
-		//		for (int i = 0; i < matrix.RowCount; i++)
-		//		{
-		//			for (int j = 0; j < matrix.ColumnCount; j++)
-		//			{
-		//				matrix.Set(i, j, linearEquations[i][j]);
-		//			}
-		//		}
-		//		Console.Write(matrix);
-		//		matrix.ReducedRowEchelonForm();
-		//		Console.Write(matrix);
-		//		this.task.SetResult(9);
-		//	}));
-		//	int task = await taskCompletionSource.get_Task();
-		//	variable = null;
-		//	return task;
-		//}
 
 		private IFiniteGroup<int> pgroup;
 
