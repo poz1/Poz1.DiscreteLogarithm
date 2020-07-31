@@ -42,6 +42,7 @@ namespace Poz1.DiscreteLogarithm.Model
 				}
 				return order;
 			}
+          
 		}
 
 		public ModuloMultiplicativeGroup(int modulus)
@@ -123,12 +124,21 @@ namespace Poz1.DiscreteLogarithm.Model
 			}
 
 			return 0;
-			//throw new Exception("Modulus must be prime or it's not a group");
 		}
 
 		public int Multiply(int x, int y)
 		{
 			return (x * y) % Modulus;
+		}
+
+		public int Divide(int x, int y)
+		{
+			x %= Modulus;
+			int inv = GetInverse(y);
+			if (inv == -1)
+				throw new Exception( "Division not defined");
+			else
+				return(inv * x) % Modulus;
 		}
 
 		public int Pow(int x, int y)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading;
@@ -10,7 +11,8 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 	public class PollardRhoAlgorithm : DiscreteLogarithmAlgorithm<int>
 	{
 		private readonly Func<int, PollardRhoPartition<int>> partitionFunction;
-
+		private  ModuloMultiplicativeGroup subGroup;
+		
 		public PollardRhoAlgorithm() : this(x => 
 		{
 			var s1 = new PollardRhoS1<int>();
@@ -24,7 +26,13 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 				_ => s2,
 			};
 		}) { }
-		
+
+		public PollardRhoAlgorithm(int order) : this()
+        {
+			this.subGroup = new ModuloMultiplicativeGroup(order);
+        }
+
+
 		public PollardRhoAlgorithm(Func<int, PollardRhoPartition<int>> partitionFunction)
 		{
 			this.partitionFunction = partitionFunction;
@@ -36,6 +44,7 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 
 			Task.Run(() =>
 			{
+
 				if (!(group is ICyclicGroup<int>) && !(group is IFiniteGroup<int>))
 				{
 					task.SetException(new ArgumentException("Group has to be finite and cyclic"));
@@ -43,6 +52,10 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 				}
 
 				var finiteGroup = (IFiniteGroup<int>)group;
+
+				if (subGroup == null)
+					subGroup = (ModuloMultiplicativeGroup)finiteGroup;
+
 				var table = new Dictionary<int, PollardRhoTriad<int>>();
 				var triad = new PollardRhoTriad<int>(1,0,0);
 
@@ -53,27 +66,64 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm.PollardRho
 					triad = partition.GetNextTriad(finiteGroup, alpha, beta, triad.X, triad.A, triad.B);
 					Console.WriteLine("i: " + i + " X: " + triad.X + " A: " + triad.A + " B: " + triad.B);
 
-					table.Add(i, triad);
 
-					if (i % 2 != 0)
-						continue;
 
-					var halfIndex = i / 2;
-					if (halfIndex > 0 && table[halfIndex].X == triad.X)
-					{
-						var r = Modulus(table[halfIndex].B - triad.B, finiteGroup.Order);
-						if (r == 0)
+
+					PollardRhoTriad<int> newTriad = null;
+
+
+					for (int j = i; j <= i * 2; j++)
+                    {
+						if (i == j)
 						{
-							task.SetException(new Exception("Terminate the algorithm with failure"));
-							return;
+							newTriad = triad;
+							Console.WriteLine("		j: " + j + " X: " + newTriad.X + " A: " + newTriad.A + " B: " + newTriad.B);
 						}
 						else
 						{
-							var x = Modulus(group.Multiply(group.GetInverse(r), triad.A - table[halfIndex].A), finiteGroup.Order);
-							task.SetResult(x);
-							return;
+							var newPartition = partitionFunction(newTriad.X);
+							newTriad = newPartition.GetNextTriad(finiteGroup, alpha, beta, newTriad.X, newTriad.A, newTriad.B);
+							Console.WriteLine("		j: " + j + " X: " + newTriad.X + " A: " + newTriad.A + " B: " + newTriad.B);
+
+							if (newTriad.X == triad.X)
+							{
+								var r = Modulus(triad.B - newTriad.B, subGroup.Modulus);
+								if (r == 0)
+								{
+									task.SetException(new Exception("Terminate the algorithm with failure"));
+									return;
+								}
+								else
+								{
+									var x = Modulus(subGroup.Multiply(subGroup.GetInverse(r), newTriad.A - triad.A), subGroup.Modulus);
+									task.SetResult(x);
+									return;
+								}
+							}
 						}
-					}
+                    }
+
+					//table.Add(i, triad);
+
+					//if (i % 2 != 0)
+					//	continue;
+
+					//var halfIndex = i / 2;
+					//               if (halfIndex > 0 && table[halfIndex].X == triad.X)
+					//               {
+					//                   var r = Modulus(table[halfIndex].B - triad.B, subGroup.Modulus);
+					//                   if (r == 0)
+					//                   {
+					//                       task.SetException(new Exception("Terminate the algorithm with failure"));
+					//                       return;
+					//                   }
+					//                   else
+					//                   {
+					//		var x = Modulus(subGroup.Multiply(subGroup.GetInverse(r), triad.A - table[halfIndex].A), subGroup.Modulus);
+					//                       task.SetResult(x);
+					//                       return;
+					//                   }
+					//               }
 				}
 			});
 

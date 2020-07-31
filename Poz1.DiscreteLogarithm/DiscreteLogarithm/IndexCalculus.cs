@@ -1,6 +1,8 @@
 using Poz1.DiscreteLogarithm.Model;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,16 +79,27 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 
 				//var hh = SolveLinearEquations(linearEquations, pgroup.Order + 1);
 
-				var wikiTest = new int[,] { { 8,1,6 }, { 3,5,7 }, { 4,9,2} };
+				//var wikiTest = new int[,] { { 8,1,6 }, { 3,5,7 }, { 4,9,2} };
 				//Gauss(3,4, wikiTest);
-				PrintMatrix(linearEquations);
+				//PrintMatrix(linearEquations);
+				//PrintMatrix(wikiTest);
+
+				LinearEquationSolver test = new LinearEquationSolver((ModuloMultiplicativeGroup)group);
+
+
+				foreach (var asdf in linearEquations)
+				{
+					test.AddLinearEquation(asdf);
+				}
+
+				var result = test.Solve();
 
 				//RREF(linearEquations, t + c, firstNPrimes.Count + 1);
 				//RREF(linearEquations, 3, 3);
 				//var bhu = new int[][] { new int[]{ 3,5,14 }, new int[] { 7,3,6 } };
 
-				gauss(linearEquations, pgroup.Order);
-				PrintMatrix(linearEquations);
+				//gauss(linearEquations, pgroup.Order);
+				//PrintMatrix(linearEquations);
 				//Matrix<int> matrix = new Matrix<int>((int)linearEquations.Length, (int)linearEquations[0].Length, new PrimeField(this.groupOrder + 1));
 				//for (int i = 0; i < matrix.RowCount; i++)
 				//{
@@ -109,9 +122,9 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 
 		
 
-		private int[][] GetLinearEquations(int numberOfEquations, List<int> S, int alpha)
+		private decimal[][] GetLinearEquations(int numberOfEquations, List<int> S, int alpha)
 		{
-			var count = new int[numberOfEquations][];
+			var count = new decimal[numberOfEquations][];
 			double[] numArray = new double[numberOfEquations];
 			Random random = new Random();
 			int[] numArray1 = new int[] { 100, 18, 12, 62, 143, 206 };
@@ -132,7 +145,7 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 						}
 						if (factors.Count != 0)
 						{
-							count[num] = new int[S.Count + 1];
+							count[num] = new decimal[S.Count + 1];
 							count[num][ S.Count] = num1;
 							int num2 = 0;
 							for (int i = 0; i < factors.Count; i++)
@@ -263,6 +276,138 @@ namespace Poz1.DiscreteLogarithm.DiscreteLogarithm
 			{
 				first = frst;
 				second = scnd;
+			}
+		}
+		class LinearEquationSolver
+		{
+			ModuloMultiplicativeGroup group;
+			public LinearEquationSolver(ModuloMultiplicativeGroup group)
+            {
+				this.group = group;
+            }
+
+			List<LinearEquation> rows = new List<LinearEquation>();
+			decimal[] solution;
+
+			public void AddLinearEquation(decimal result, params decimal[] coefficients)
+			{
+				rows.Add(new LinearEquation(result, coefficients));
+			}
+
+			public void AddLinearEquation(params decimal[] coefficients)
+			{
+				rows.Add(new LinearEquation(coefficients));
+			}
+
+			public IList<decimal> Solve()       //Returns a list of coefficients for the variables in the same order they were entered
+			{
+				solution = new decimal[rows[0].Coefficients.Count()];
+
+				for (int pivotM = 0; pivotM < rows.Count() - 1; pivotM++)
+				{
+					int pivotN = rows[pivotM].IndexOfFirstNonZero;
+
+					for (int i = pivotN + 1; i < rows.Count(); i++)
+					{
+						LinearEquation rowToReduce = rows[i];
+						decimal pivotFactor = rowToReduce[pivotN] / -rows[pivotM][pivotN];
+						
+						//decimal pivotFactor = group.Divide((int)rowToReduce[pivotN], (int)-rows[pivotM][pivotN]);
+						rowToReduce.AddCoefficients(rows[pivotM], pivotFactor);
+					}
+				}
+
+				while (rows.Any(r => r.Result != 0))
+				{
+					LinearEquation row = rows.FirstOrDefault(r => r.NonZeroCount == 1);
+					if (row == null)
+					{
+						break;
+					}
+
+					int solvedIndex = row.IndexOfFirstNonZero;
+					decimal newSolution = row.Result / row[solvedIndex];
+					//decimal newSolution = group.Divide((int)row.Result , (int)row[solvedIndex]);
+
+					AddToSolution(solvedIndex, newSolution);
+				}
+
+				return solution;
+			}
+
+			private void AddToSolution(int index, decimal value)
+			{
+				foreach (LinearEquation row in rows)
+				{
+					decimal coefficient = row[index];
+					row[index] -= coefficient;
+					row.Result -= coefficient * value;
+				}
+
+				solution[index] = value;
+			}
+
+			private class LinearEquation
+			{
+				public decimal[] Coefficients;
+				public decimal Result;
+
+				public LinearEquation(decimal result, params decimal[] coefficients)
+				{
+					this.Coefficients = coefficients;
+					this.Result = result;
+				}
+
+				public LinearEquation(params decimal[] coefficients)
+				{
+					this.Coefficients = coefficients[0..(coefficients.Length -1)];
+					this.Result = coefficients[coefficients.Length - 1];
+				}
+
+				public decimal this[int i]
+				{
+					get { return Coefficients[i]; }
+					set { Coefficients[i] = value; }
+				}
+
+				public void AddCoefficients(LinearEquation pivotEquation, decimal factor)
+				{
+					for (int i = 0; i < this.Coefficients.Count(); i++)
+					{
+						this[i] += pivotEquation[i] * factor;
+						if (Math.Abs(this[i]) < 0.000000001M)    //Because sometimes rounding errors mean it's not quite zero, and it needs to be
+						{
+							this[i] = 0;
+						}
+					}
+
+					this.Result += pivotEquation.Result * factor;
+				}
+
+				public int IndexOfFirstNonZero
+				{
+					get
+					{
+						for (int i = 0; i < Coefficients.Count(); i++)
+						{
+							if (this[i] != 0) return i;
+						}
+						return -1;
+					}
+				}
+
+				public int NonZeroCount
+				{
+					get
+					{
+						int count = 0;
+						for (int i = 0; i < Coefficients.Count(); i++)
+						{
+							if (this[i] != 0) count++;
+						}
+						return count;
+					}
+				}
 			}
 		}
 	}
